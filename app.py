@@ -206,18 +206,31 @@ def find_fighter_id_fuzzy(name, names):
 
     return None
 
-def find_shortest_paths(graph, start_id, target_id):
-    """使用 BFS 高效找出起点到终点的所有最短路径（最小步数）"""
+def find_shortest_paths(graph, start_id, target_id, max_depth=10, max_paths=500):
+    """
+    带内存安全阀的 BFS 算法：
+    1. 限制最大搜索步数 max_depth=10（防止跨量级死循环或过度爆搜索Tree）
+    2. 限制最多保存的路径条数 max_paths=500（防止几万条路径塞爆 RAM）
+    """
     if start_id == target_id:
         return [[start_id]]
     
     paths = []
     queue = deque([[start_id]])
     found_length = None
+    visited_at_length = {} # 记录节点被首次/最短访问时的步数
     
     while queue:
+        # 内存安全阀 1：如果找到的路径总数达到了安全上限，提前终止，防止 OOM
+        if len(paths) >= max_paths:
+            break
+            
         path = queue.popleft()
         current = path[-1]
+        
+        # 内存安全阀 2：限制最大搜索步数
+        if len(path) > max_depth:
+            break
         
         if found_length is not None and len(path) > found_length:
             break
@@ -232,8 +245,17 @@ def find_shortest_paths(graph, start_id, target_id):
         for neighbor in graph.get(current, set()):
             if neighbor not in path:
                 new_path = path + [neighbor]
-                if found_length is None or len(new_path) <= found_length:
+                new_length = len(new_path)
+                
+                # 剪枝优化：如果某个节点在更短或相同步数下已经被海量遍历过，限制重复入队分支
+                if neighbor in visited_at_length and visited_at_length[neighbor] < new_length - 1:
+                    continue
+                    
+                visited_at_length[neighbor] = new_length - 1
+                
+                if found_length is None or new_length <= found_length:
                     queue.append(new_path)
+                    
     return paths
 
 def find_paths_through_waypoints(graph, node_ids):
