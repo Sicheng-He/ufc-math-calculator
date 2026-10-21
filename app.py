@@ -206,11 +206,9 @@ def find_fighter_id_fuzzy(name, names):
 
     return None
 
-def find_shortest_paths(graph, start_id, target_id, max_depth=10, max_paths=500):
+def find_shortest_paths(graph, start_id, target_id, max_depth=30, max_paths=500):
     """
-    带内存安全阀的 BFS 算法：
-    1. 限制最大搜索步数 max_depth=10（防止跨量级死循环或过度爆搜索Tree）
-    2. 限制最多保存的路径条数 max_paths=500（防止几万条路径塞爆 RAM）
+    超远深度 (最长 30 步) + 内存绝对安全阀的 BFS 算法
     """
     if start_id == target_id:
         return [[start_id]]
@@ -218,43 +216,52 @@ def find_shortest_paths(graph, start_id, target_id, max_depth=10, max_paths=500)
     paths = []
     queue = deque([[start_id]])
     found_length = None
-    visited_at_length = {} # 记录节点被首次/最短访问时的步数
     
+    # 记录每个节点在被访问时对应的最短步数，防止同一个节点被重复拓展无限次
+    visited_min_depth = {start_id: 1}
+    
+    # 每一层扩展的数量限制（防止某一层分支太多爆 RAM）
+    depth_counts = {}
+
     while queue:
-        # 内存安全阀 1：如果找到的路径总数达到了安全上限，提前终止，防止 OOM
         if len(paths) >= max_paths:
             break
             
         path = queue.popleft()
         current = path[-1]
+        curr_depth = len(path)
         
-        # 内存安全阀 2：限制最大搜索步数
-        if len(path) > max_depth:
+        # 允许最大 30 步深度
+        if curr_depth > max_depth:
             break
-        
-        if found_length is not None and len(path) > found_length:
+            
+        if found_length is not None and curr_depth > found_length:
             break
             
         if current == target_id:
             if found_length is None:
-                found_length = len(path)
-            if len(path) == found_length:
+                found_length = curr_depth
+            if curr_depth == found_length:
                 paths.append(path)
             continue
             
+        # 限制单层扩展节点数上限，防止爆炸
+        depth_counts[curr_depth] = depth_counts.get(curr_depth, 0) + 1
+        if depth_counts[curr_depth] > 3000:
+            continue
+
         for neighbor in graph.get(current, set()):
             if neighbor not in path:
-                new_path = path + [neighbor]
-                new_length = len(new_path)
+                new_depth = curr_depth + 1
                 
-                # 剪枝优化：如果某个节点在更短或相同步数下已经被海量遍历过，限制重复入队分支
-                if neighbor in visited_at_length and visited_at_length[neighbor] < new_length - 1:
+                # 如果这个节点已经被更短或相同步数的路径访问过，不再重复扩展
+                if neighbor in visited_min_depth and visited_min_depth[neighbor] < new_depth:
                     continue
-                    
-                visited_at_length[neighbor] = new_length - 1
                 
-                if found_length is None or new_length <= found_length:
-                    queue.append(new_path)
+                visited_min_depth[neighbor] = new_depth
+                
+                if found_length is None or new_depth <= found_length:
+                    queue.append(path + [neighbor])
                     
     return paths
 
