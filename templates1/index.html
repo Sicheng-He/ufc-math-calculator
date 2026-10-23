@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UFC 选手叠盒子计算器 / UFC MMA Math Calculator</title>
+    <!-- 引入 Tailwind CSS 保证现代美观的 UI -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .lang-en { display: none; }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between selection:bg-red-600 selection:text-white">
+
+    <!-- 右上角极简中英文切换按钮 -->
+    <div class="absolute top-4 right-4 z-50">
+        <button onclick="toggleLanguage()" id="langBtn" class="px-3 py-1.5 text-xs font-semibold bg-slate-900 border border-slate-700 rounded-lg hover:bg-slate-800 transition text-slate-300 shadow-sm">
+            🌐 English / 中文
+        </button>
+    </div>
+
+    <div class="max-w-3xl mx-auto px-4 py-12 w-full flex-grow">
+        
+        <!-- 头部标题：严格按要求只有两行大字 -->
+        <header class="text-center mb-8">
+            <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-white mb-2">
+                <span class="lang-zh">UFC 选手叠盒子计算器</span>
+                <span class="lang-en">UFC MMA Math Calculator</span>
+            </h1>
+            <p class="text-lg sm:text-xl font-medium text-red-500">
+                <span class="lang-zh">UFC Fighter Transitive Math Calculator</span>
+                <span class="lang-en">UFC Fighter Transitive Math Calculator</span>
+            </p>
+        </header>
+
+        <!-- 项目描述区域 -->
+        <section class="bg-slate-900/80 border border-slate-800/80 rounded-2xl p-6 mb-8 shadow-xl backdrop-blur-sm text-sm sm:text-base leading-relaxed text-slate-300">
+            <!-- 中文描述 -->
+            <div class="lang-zh space-y-4">
+                <p>叠盒子就是通过不断连接“谁赢过谁”，把两名选手联系起来。</p>
+                <div class="p-3 bg-slate-950/60 rounded-xl border border-slate-800/60 font-mono text-xs sm:text-sm text-red-400 overflow-x-auto whitespace-nowrap">
+                    李景亮 → 圣地亚哥·彭兹尼比奥 → 尼尔·马格尼 → 凯尔文·盖斯特鲁姆 → 迈克尔·比斯平 → 马特·哈米尔 → 乔恩·琼斯 → 斯蒂佩·米欧奇 → 弗朗西斯·纳干诺
+                </div>
+                <p>每一名选手都曾击败链条中的下一名选手。通过不断连接真实比赛的胜负，我们可以找到几乎任意两名 UFC 选手之间的联系，甚至连接不同量级、不同年代的选手。</p>
+            </div>
+
+            <!-- 英文描述 -->
+            <div class="lang-en space-y-4">
+                <p>Stacking connects two fighters by linking together “who beat whom.”</p>
+                <div class="p-3 bg-slate-950/60 rounded-xl border border-slate-800/60 font-mono text-xs sm:text-sm text-red-400 overflow-x-auto whitespace-nowrap">
+                    Li Jingliang → Santiago Ponzinibbio → Neil Magny → Kelvin Gastelum → Michael Bisping → Matt Hamill → Jon Jones → Stipe Miocic → Francis Ngannou
+                </div>
+                <p>Each fighter defeated the next fighter in the chain. By connecting real fight results, we can find connections between almost any two UFC fighters, even across different weight classes and generations.</p>
+            </div>
+        </section>
+
+        <!-- 选手输入区域（保持原有表单逻辑不变，确保后端正常工作） -->
+        <main class="bg-slate-900/80 border border-slate-800/80 rounded-2xl p-6 sm:p-8 shadow-xl backdrop-blur-sm">
+            <form method="POST" action="/" class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-11 gap-4 items-center">
+                    <!-- 选手 A -->
+                    <div class="md:col-span-5 space-y-2">
+                        <label for="fighter_a" class="block text-xs font-bold uppercase tracking-wider text-slate-400">
+                            <span class="lang-zh">起点选手 (Fighter A)</span>
+                            <span class="lang-en">Starting Fighter (A)</span>
+                        </label>
+                        <input type="text" id="fighter_a" name="fighter_a" required 
+                            value="{{ request.form.get('fighter_a', '') }}"
+                            placeholder="例如：Demetrious Johnson / 大力鼠" 
+                            class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-transparent transition">
+                    </div>
+
+                    <!-- 互换按钮 -->
+                    <div class="md:col-span-1 flex justify-center pt-2 md:pt-6">
+                        <button type="button" onclick="swapFighters()" title="Swap / 互换" class="p-3 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-full text-slate-300 hover:text-white transition shadow-sm">
+                            ⇄
+                        </button>
+                    </div>
+
+                    <!-- 选手 Z -->
+                    <div class="md:col-span-5 space-y-2">
+                        <label for="fighter_z" class="block text-xs font-bold uppercase tracking-wider text-slate-400">
+                            <span class="lang-zh">终点选手 (Fighter Z)</span>
+                            <span class="lang-en">Target Fighter (Z)</span>
+                        </label>
+                        <input type="text" id="fighter_z" name="fighter_z" required 
+                            value="{{ request.form.get('fighter_z', '') }}"
+                            placeholder="例如：Francis Ngannou / 铁血" 
+                            class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-transparent transition">
+                    </div>
+                </div>
+
+                <!-- 提交按钮 -->
+                <button type="submit" class="w-full py-4 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl shadow-lg shadow-red-600/20 transition duration-200 text-center text-base tracking-wide">
+                    <span class="lang-zh">开始计算 / Calculate</span>
+                    <span class="lang-en">Calculate / 开始计算</span>
+                </button>
+            </form>
+
+            <!-- 渲染搜索结果区（如果你原本的代码里有结果展示循环，保留原样嵌入到此处） -->
+            {% if results is defined %}
+                <div class="mt-8 pt-6 border-t border-slate-800">
+                    <!-- 你的计算结果输出代码保持不变 -->
+                    {{ results | safe }}
+                </div>
+            {% endif %}
+        </main>
+    </div>
+
+    <!-- 简单的切换脚本 -->
+    <script>
+        let currentLang = 'zh';
+        function toggleLanguage() {
+            currentLang = currentLang === 'zh' ? 'en' : 'zh';
+            const zhElements = document.querySelectorAll('.lang-zh');
+            const enElements = document.querySelectorAll('.lang-en');
+            
+            if (currentLang === 'en') {
+                zhElements.forEach(el => el.style.display = 'none');
+                enElements.forEach(el => el.style.display = 'block');
+                document.getElementById('langBtn').innerText = '🇨🇳 中文 / English';
+            } else {
+                zhElements.forEach(el => el.style.display = 'block');
+                enElements.forEach(el => el.style.display = 'none');
+                document.getElementById('langBtn').innerText = '🇺🇸 English / 中文';
+            }
+        }
+
+        // 初始化隐藏英文
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.lang-en').forEach(el => el.style.display = 'none');
+        });
+
+        // 互换选手框内容的 JS 辅助函数
+        function swapFighters() {
+            const inputA = document.getElementById('fighter_a');
+            const inputZ = document.getElementById('fighter_z');
+            const temp = inputA.value;
+            inputA.value = inputZ.value;
+            inputZ.value = temp;
+        }
+    </script>
+</body>
+</html>
