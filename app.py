@@ -371,7 +371,7 @@ PAGE = """
                             <span class="lang-en">Starting Fighter (A)</span>
                         </label>
                         <input list="fighters" name="start" id="startInput" required value="{{ start }}"
-                            placeholder="例如：Demetrious Johnson / 大力鼠" 
+                            placeholder="例如：Max Holloway / 霍洛威" 
                             class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-transparent transition">
                     </div>
 
@@ -389,7 +389,7 @@ PAGE = """
                             <span class="lang-en">Target Fighter (Z)</span>
                         </label>
                         <input list="fighters" name="target" id="targetInput" required value="{{ target }}"
-                            placeholder="例如：Francis Ngannou / 铁血" 
+                            placeholder="例如：Islam Makhachev / 马哈切夫" 
                             class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-transparent transition">
                     </div>
                 </div>
