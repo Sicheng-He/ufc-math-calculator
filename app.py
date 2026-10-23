@@ -306,248 +306,227 @@ fighter_names = sorted(names.values())
 
 
 PAGE = """
-<!doctype html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>UFC 选手叠盒子计算器 | UFC MMA Math Calculator</title>
-  <style>
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      min-height: 100vh;
-      font-family: Arial, "Microsoft YaHei", sans-serif;
-      background: #0d0f12;
-      color: #f5f5f5;
-    }
-    main {
-      width: min(980px, calc(100% - 32px));
-      margin: 0 auto;
-      padding: 48px 0;
-    }
-    .tag {
-      color: #ff4d37;
-      font-size: 13px;
-      font-weight: bold;
-      letter-spacing: 2px;
-    }
-    h1 {
-      margin: 12px 0;
-      font-size: clamp(26px, 5vw, 48px);
-    }
-    .intro { color: #aeb5bf; line-height: 1.7; font-size: 15px; }
-    .panel {
-      margin-top: 28px;
-      padding: 28px;
-      border: 1px solid #303640;
-      border-radius: 18px;
-      background: #161a20;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-    }
-    .form-group {
-      display: grid;
-      grid-template-columns: 1fr auto 1fr auto;
-      gap: 12px;
-      align-items: center;
-    }
-    .waypoint-box {
-      margin-top: 14px;
-    }
-    input, button {
-      border: 0;
-      border-radius: 10px;
-      font-size: 16px;
-      padding: 14px 18px;
-    }
-    input { 
-      background: #272d36; 
-      color: white; 
-      outline: none; 
-      width: 100%; 
-      font-size: 16px;
-    }
-    input:focus { border: 1px solid #ff4d37; }
-    
-    .swap-btn {
-      background: #272d36;
-      color: #aeb5bf;
-      border: 1px solid #3d4654;
-      cursor: pointer;
-      padding: 14px 16px;
-      border-radius: 10px;
-      font-weight: bold;
-      transition: all 0.2s;
-    }
-    .swap-btn:hover {
-      background: #ff4d37;
-      color: white;
-      border-color: #ff4d37;
-    }
-
-    button[type="submit"] {
-      cursor: pointer;
-      background: #ff4d37;
-      color: white;
-      font-weight: bold;
-      white-space: nowrap;
-    }
-    button[type="submit"]:hover { background: #ff3219; }
-
-    .notice, .result {
-      margin-top: 24px;
-      padding: 18px;
-      border-radius: 12px;
-    }
-    .notice { background: #33211e; color: #ffb7a9; border: 1px solid #5c2c26; }
-    .result { background: #202731; border: 1px solid #2e3846; }
-    
-    .path {
-      padding: 12px 0;
-      border-bottom: 1px solid #343b45;
-      color: #e9edf3;
-      line-height: 1.6;
-      font-size: 15px;
-    }
-    .path:last-child { border-bottom: 0; }
-    .muted { color: #9da6b2; font-size: 13px; }
-
-    details {
-      margin-top: 15px;
-      background: #191e26;
-      border: 1px solid #2e3846;
-      border-radius: 10px;
-      padding: 12px 16px;
-    }
-    summary {
-      cursor: pointer;
-      color: #ff4d37;
-      font-weight: bold;
-      outline: none;
-    }
-    summary:hover { color: #ff6a55; }
-
-    @media (max-width: 768px) {
-      .form-group { grid-template-columns: 1fr; }
-      .swap-btn { width: 100%; }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UFC 选手叠盒子计算器 / UFC MMA Math Calculator</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .lang-en { display: none; }
+    </style>
 </head>
-<body>
-  <main>
-    <div class="tag">UFC MMA MATH CALCULATOR / 叠盒子计算器</div>
-    <h1>UFC 选手叠盒子计算器</h1>
-    <p class="intro">
-      输入两名选手，默认秒级计算<strong>最短胜负链条</strong>。<br>
-      Query shortest transitive logic chains between Fighter A and Z instantly.<br>
-      支持通过途径点（如 B 或 B > C）组合更长的进阶逻辑。
-    </p>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between selection:bg-red-600 selection:text-white">
 
-    <section class="panel">
-      <form method="post" id="calcForm">
-        <div class="form-group">
-          <!-- 选手 A -->
-          <input list="fighters" name="start" id="startInput" placeholder="选手 A (如 Volkanovski / 沃尔卡诺夫斯基)"
-                 value="{{ start }}" required>
-          
-          <!-- 交换按钮 -->
-          <button type="button" class="swap-btn" onclick="swapFighters()" title="互换 A 和 Z / Swap">⇄ 互换 / Swap</button>
+    <!-- 右上角切换语言按钮 -->
+    <div class="absolute top-4 right-4 z-50">
+        <button type="button" onclick="toggleLanguage()" id="langBtn" class="px-3 py-1.5 text-xs font-semibold bg-slate-900 border border-slate-700 rounded-lg hover:bg-slate-800 transition text-slate-300 shadow-sm">
+            🌐 English / 中文
+        </button>
+    </div>
 
-          <!-- 选手 Z -->
-          <input list="fighters" name="target" id="targetInput" placeholder="选手 Z (如 Gaethje / 加瑟基)"
-                 value="{{ target }}" required>
+    <div class="max-w-3xl mx-auto px-4 py-12 w-full flex-grow">
+        
+        <!-- 头部标题：严格按要求只有两行大字 -->
+        <header class="text-center mb-8">
+            <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-white mb-2">
+                <span class="lang-zh">UFC 选手叠盒子计算器</span>
+                <span class="lang-en">UFC MMA Math Calculator</span>
+            </h1>
+            <p class="text-lg sm:text-xl font-medium text-red-500">
+                <span class="lang-zh">UFC Fighter Transitive Math Calculator</span>
+                <span class="lang-en">UFC Fighter Transitive Math Calculator</span>
+            </p>
+        </header>
 
-          <!-- 提交按钮 -->
-          <button type="submit">开始计算<br><span style="font-size: 11px; font-weight: normal;">Calculate</span></button>
-        </div>
-
-        <!-- 途径点输入框 -->
-        <div class="waypoint-box">
-          <input type="text" name="waypoints" placeholder="途径点（可选，如输入 C 或 C > F，支持中英文链条） / Intermediate waypoints (optional)"
-                 value="{{ waypoints }}">
-        </div>
-      </form>
-
-      <datalist id="fighters">
-        {% for fighter in fighter_names %}
-        <option value="{{ fighter }}">
-        {% endfor %}
-      </datalist>
-
-      {% if error %}
-      <div class="notice">{{ error }}</div>
-      {% endif %}
-
-      {% if matched_start and matched_target %}
-      <div style="margin-top: 15px; color: #8892b0; font-size: 14px;">
-        🎯 匹配识别 / Match: <strong>{{ matched_start }}</strong> vs <strong>{{ matched_target }}</strong>
-        {% if matched_waypoints_str %}
-        <br>📍 途径点 / Waypoints: <span style="color: #ff9d00;">{{ matched_waypoints_str }}</span>
-        {% endif %}
-      </div>
-      {% endif %}
-
-      {% if paths is not none %}
-      <div class="result">
-        <strong style="font-size: 17px;">
-          找到 {{ total_count }} 条路径 / Found {{ total_count }} paths:
-        </strong>
-        <div style="margin-top: 12px;"></div>
-
-        {% if paths %}
-          <div style="font-size: 13px; color: #ff9d00; margin-bottom: 8px;">
-            🔥 默认展示较短路径（≤{{ default_display_steps }}步 / Shortest paths displayed by default）：
-          </div>
-          {% for p_item in default_paths %}
-          <div class="path">
-            <strong>#{{ p_item.index }}</strong> [{{ p_item.steps }}步/Steps]: 
-            {{ p_item.formatted_html|safe }}
-          </div>
-          {% endfor %}
-
-          {% if longer_paths %}
-          <details>
-            <summary>📂 点击展开查看更长的路径 ({{ longer_paths|length }} 条 / Click to expand longer paths)</summary>
-            <div style="margin-top: 12px;">
-              {% for p_item in longer_paths %}
-              <div class="path">
-                <strong>#{{ p_item.index }}</strong> [{{ p_item.steps }}步/Steps]: 
-                {{ p_item.formatted_html|safe }}
-              </div>
-              {% endfor %}
+        <!-- 项目描述区域 -->
+        <section class="bg-slate-900/80 border border-slate-800/80 rounded-2xl p-6 mb-8 shadow-xl backdrop-blur-sm text-sm sm:text-base leading-relaxed text-slate-300">
+            <div class="lang-zh space-y-4">
+                <p>叠盒子就是通过不断连接“谁赢过谁”，把两名选手联系起来。</p>
+                <div class="p-3 bg-slate-950/60 rounded-xl border border-slate-800/60 font-mono text-xs sm:text-sm text-red-400 overflow-x-auto whitespace-nowrap">
+                    李景亮 → 圣地亚哥·彭兹尼比奥 → 尼尔·马格尼 → 凯尔文·盖斯特鲁姆 → 迈克尔·比斯平 → 马特·哈米尔 → 乔恩·琼斯 → 斯蒂佩·米欧奇 → 弗朗西斯·纳干诺
+                </div>
+                <p>每一名选手都曾击败链条中的下一名选手。通过不断连接真实比赛的胜负，我们可以找到几乎任意两名 UFC 选手之间的联系，甚至连接不同量级、不同年代的选手。</p>
             </div>
-          </details>
-          {% endif %}
 
-        {% else %}
-          <p class="muted" style="margin: 4px 0 0 0;">未能在当前条件下找到符合要求的路径。</p>
-          <p class="muted" style="margin: 4px 0 0 0; font-size: 13px;">No path found under current condition.</p>
-          
-          {% if rev_paths %}
-          <div style="margin-top: 15px; padding-top: 12px; border-top: 1px dashed #444;">
-            <p style="color: #ff9d00;">💡 提示 / Tip: 顺向没找到，但找到了 <strong>{{ matched_target }}</strong> 反向叠盒子赢 <strong>{{ matched_start }}</strong> 的路径 / Reverse paths found:</p>
-            {% for r_item in rev_paths %}
-            <div class="path" style="color: #ccc;">
-              <strong>#{{ r_item.index }}</strong> [{{ r_item.steps }}步]: {{ r_item.formatted_html|safe }}
+            <div class="lang-en space-y-4">
+                <p>Stacking connects two fighters by linking together “who beat whom.”</p>
+                <div class="p-3 bg-slate-950/60 rounded-xl border border-slate-800/60 font-mono text-xs sm:text-sm text-red-400 overflow-x-auto whitespace-nowrap">
+                    Li Jingliang → Santiago Ponzinibbio → Neil Magny → Kelvin Gastelum → Michael Bisping → Matt Hamill → Jon Jones → Stipe Miocic → Francis Ngannou
+                </div>
+                <p>Each fighter defeated the next fighter in the chain. By connecting real fight results, we can find connections between almost any two UFC fighters, even across different weight classes and generations.</p>
             </div>
-            {% endfor %}
-          </div>
-          {% endif %}
-        {% endif %}
-      </div>
-      {% endif %}
-    </section>
-  </main>
+        </section>
 
-  <script>
-    function swapFighters() {
-      const startInput = document.getElementById('startInput');
-      const targetInput = document.getElementById('targetInput');
-      const temp = startInput.value;
-      startInput.value = targetInput.value;
-      targetInput.value = temp;
-    }
-  </script>
+        <!-- 表单计算与输出区 -->
+        <main class="bg-slate-900/80 border border-slate-800/80 rounded-2xl p-6 sm:p-8 shadow-xl backdrop-blur-sm">
+            <form method="POST" action="/" class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-11 gap-4 items-center">
+                    <!-- 选手 A -->
+                    <div class="md:col-span-5 space-y-2">
+                        <label for="startInput" class="block text-xs font-bold uppercase tracking-wider text-slate-400">
+                            <span class="lang-zh">起点选手 (Fighter A)</span>
+                            <span class="lang-en">Starting Fighter (A)</span>
+                        </label>
+                        <input list="fighters" name="start" id="startInput" required value="{{ start }}"
+                            placeholder="例如：Demetrious Johnson / 大力鼠" 
+                            class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-transparent transition">
+                    </div>
+
+                    <!-- 互换按钮 -->
+                    <div class="md:col-span-1 flex justify-center pt-2 md:pt-6">
+                        <button type="button" onclick="swapFighters()" title="Swap / 互换" class="p-3 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-full text-slate-300 hover:text-white transition shadow-sm">
+                            ⇄
+                        </button>
+                    </div>
+
+                    <!-- 选手 Z -->
+                    <div class="md:col-span-5 space-y-2">
+                        <label for="targetInput" class="block text-xs font-bold uppercase tracking-wider text-slate-400">
+                            <span class="lang-zh">终点选手 (Fighter Z)</span>
+                            <span class="lang-en">Target Fighter (Z)</span>
+                        </label>
+                        <input list="fighters" name="target" id="targetInput" required value="{{ target }}"
+                            placeholder="例如：Francis Ngannou / 铁血" 
+                            class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-transparent transition">
+                    </div>
+                </div>
+
+                <!-- 途径点 -->
+                <div class="space-y-2">
+                    <label for="waypoints" class="block text-xs font-bold uppercase tracking-wider text-slate-400">
+                        <span class="lang-zh">途径点（可选）</span>
+                        <span class="lang-en">Intermediate Waypoints (Optional)</span>
+                    </label>
+                    <input type="text" id="waypoints" name="waypoints" value="{{ waypoints }}"
+                        placeholder="例如：C 或 C > F" 
+                        class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-transparent transition">
+                </div>
+
+                <!-- 提交按钮 -->
+                <button type="submit" class="w-full py-4 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl shadow-lg shadow-red-600/20 transition duration-200 text-center text-base tracking-wide">
+                    <span class="lang-zh">开始计算 / Calculate</span>
+                    <span class="lang-en">Calculate / 开始计算</span>
+                </button>
+            </form>
+
+            <datalist id="fighters">
+                {% for fighter in fighter_names %}
+                <option value="{{ fighter }}">
+                {% endfor %}
+            </datalist>
+
+            <!-- 提示信息与错误反馈 -->
+            {% if error %}
+            <div class="mt-6 p-4 bg-red-950/60 border border-red-800/80 rounded-xl text-red-300 text-sm">
+                {{ error }}
+            </div>
+            {% endif %}
+
+            {% if matched_start and matched_target %}
+            <div class="mt-6 text-sm text-slate-400">
+                🎯 <span class="lang-zh">匹配识别：</span><span class="lang-en">Match: </span><strong>{{ matched_start }}</strong> vs <strong>{{ matched_target }}</strong>
+                {% if matched_waypoints_str %}
+                <br>📍 <span class="lang-zh">途径点：</span><span class="lang-en">Waypoints: </span><span class="text-amber-400">{{ matched_waypoints_str }}</span>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <!-- 结果区 -->
+            {% if paths is not none %}
+            <div class="mt-6 p-4 bg-slate-950/80 border border-slate-800 rounded-xl space-y-4">
+                <div class="font-bold text-base text-slate-200">
+                    <span class="lang-zh">找到 {{ total_count }} 条路径：</span>
+                    <span class="lang-en">Found {{ total_count }} paths:</span>
+                </div>
+
+                {% if paths %}
+                    <div class="text-xs text-amber-400">
+                        🔥 <span class="lang-zh">默认展示较短路径（≤{{ default_display_steps }}步）：</span>
+                        <span class="lang-en">Shortest paths displayed by default (≤{{ default_display_steps }} steps):</span>
+                    </div>
+                    {% for p_item in default_paths %}
+                    <div class="py-2 border-b border-slate-800/80 text-sm leading-relaxed text-slate-200 last:border-0">
+                        <strong>#{{ p_item.index }}</strong> [{{ p_item.steps }} <span class="lang-zh">步</span><span class="lang-en">steps</span>]: 
+                        {{ p_item.formatted_html|safe }}
+                    </div>
+                    {% endfor %}
+
+                    {% if longer_paths %}
+                    <details class="mt-4 bg-slate-900 border border-slate-800 rounded-lg p-3">
+                        <summary class="cursor-pointer text-red-500 font-bold text-sm hover:text-red-400">
+                            📂 <span class="lang-zh">点击展开查看更长的路径 ({{ longer_paths|length }} 条)</span>
+                            <span class="lang-en">Click to expand longer paths ({{ longer_paths|length }})</span>
+                        </summary>
+                        <div class="mt-3 space-y-2">
+                            {% for p_item in longer_paths %}
+                            <div class="py-2 border-b border-slate-800/80 text-sm leading-relaxed text-slate-200 last:border-0">
+                                <strong>#{{ p_item.index }}</strong> [{{ p_item.steps }} <span class="lang-zh">步</span><span class="lang-en">steps</span>]: 
+                                {{ p_item.formatted_html|safe }}
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </details>
+                    {% endif %}
+
+                {% else %}
+                    <p class="text-slate-400 text-sm">
+                        <span class="lang-zh">未能在当前条件下找到符合要求的路径。</span>
+                        <span class="lang-en">No path found under current condition.</span>
+                    </p>
+                    
+                    {% if rev_paths %}
+                    <div class="mt-4 pt-3 border-t border-dashed border-slate-800 text-sm">
+                        <p class="text-amber-400 font-medium mb-2">
+                            💡 <span class="lang-zh">提示：顺向没找到，但找到了 <strong>{{ matched_target }}</strong> 反向叠盒子赢 <strong>{{ matched_start }}</strong> 的路径：</span>
+                            <span class="lang-en">Tip: Reverse paths found for <strong>{{ matched_target }}</strong> defeating <strong>{{ matched_start }}</strong>:</span>
+                        </p>
+                        {% for r_item in rev_paths %}
+                        <div class="py-1 text-slate-400">
+                            <strong>#{{ r_item.index }}</strong> [{{ r_item.steps }} <span class="lang-zh">步</span><span class="lang-en">steps</span>]: {{ r_item.formatted_html|safe }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                {% endif %}
+            </div>
+            {% endif %}
+        </main>
+    </div>
+
+    <!-- 双语切换脚本 -->
+    <script>
+        let currentLang = 'zh';
+        function toggleLanguage() {
+            currentLang = currentLang === 'zh' ? 'en' : 'zh';
+            const zhElements = document.querySelectorAll('.lang-zh');
+            const enElements = document.querySelectorAll('.lang-en');
+            
+            if (currentLang === 'en') {
+                zhElements.forEach(el => el.style.display = 'none');
+                enElements.forEach(el => el.style.display = 'inline');
+                document.getElementById('langBtn').innerText = '🌐 中文 / English';
+            } else {
+                zhElements.forEach(el => el.style.display = 'inline');
+                enElements.forEach(el => el.style.display = 'none');
+                document.getElementById('langBtn').innerText = '🌐 English / 中文';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.lang-en').forEach(el => el.style.display = 'none');
+        });
+
+        function swapFighters() {
+            const startInput = document.getElementById('startInput');
+            const targetInput = document.getElementById('targetInput');
+            const temp = startInput.value;
+            startInput.value = targetInput.value;
+            targetInput.value = temp;
+        }
+    </script>
 </body>
 </html>
 """
